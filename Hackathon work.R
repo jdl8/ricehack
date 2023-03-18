@@ -79,6 +79,14 @@ All_QSQ_Per_Play <- data.frame(
 )
 
 
+#Assist subset analysis
+
+assists_subset <- subset(all_possessions, all_possessions$assistOppCreated>0)
+assist_iso <- subset(assists_subset, assists_subset$iso_actions>0)
+assist_pick <- subset(assists_subset, assists_subset$pick_actions>0)
+assist_post <- subset(assists_subset, assists_subset$post_actions>0)
+assist_offb <- subset(assists_subset, assists_subset$offBall_actions>0)
+
 #Nading Offensive Tendencies
 
 Nading_Possessions <- subset(all_possessions, all_possessions$player_off_a == "Nading, Samuel")
@@ -132,45 +140,55 @@ all_defenders_iso_freq <- aggregate(poss ~ player_defMatchup_a, data = iso_plays
 all_defenders_iso <- merge(all_defenders_iso, all_defenders_iso_freq, by = "player_defMatchup_a")
 all_defenders_iso_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = iso_plays, FUN = mean, na.rm = TRUE)
 all_defenders_iso <- merge(all_defenders_iso, all_defenders_iso_assist, by = "player_defMatchup_a")
+all_defenders_iso$avg_assist_points_allowed <- all_defenders_iso$assistOppCreated * mean(assist_iso$ptsScored_team)
+
 
 all_defenders_pick <- aggregate(pick_pts ~ player_defMatchup_a, data = pick_plays, FUN = mean, na.rm = TRUE)
 all_defenders_pick_freq <- aggregate(poss ~ player_defMatchup_a, data = pick_plays, FUN = sum, na.rm = TRUE)
 all_defenders_pick <- merge(all_defenders_pick, all_defenders_pick_freq, by = "player_defMatchup_a")
 all_defenders_pick_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = pick_plays, FUN = mean, na.rm = TRUE)
 all_defenders_pick <- merge(all_defenders_pick, all_defenders_pick_assist, by = "player_defMatchup_a")
+all_defenders_pick$avg_assist_points_allowed <- all_defenders_pick$assistOppCreated * mean(assist_pick$ptsScored_team)
+
 
 all_defenders_post <- aggregate(post_pts ~ player_defMatchup_a, data = post_plays, FUN = mean, na.rm = TRUE)
 all_defenders_post_freq <- aggregate(poss ~ player_defMatchup_a, data = post_plays, FUN = sum, na.rm = TRUE)
 all_defenders_post <- merge(all_defenders_post, all_defenders_post_freq, by = "player_defMatchup_a")
 all_defenders_post_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = post_plays, FUN = mean, na.rm = TRUE)
 all_defenders_post <- merge(all_defenders_post, all_defenders_post_assist, by = "player_defMatchup_a")
+all_defenders_post$avg_assist_points_allowed <- all_defenders_post$assistOppCreated * mean(assist_post$ptsScored_team)
+
 
 all_defenders_offb <- aggregate(offBall_pts ~ player_defMatchup_a, data = offb_plays, FUN = mean, na.rm = TRUE)
 all_defenders_offb_freq <- aggregate(poss ~ player_defMatchup_a, data = offb_plays, FUN = sum, na.rm = TRUE)
 all_defenders_offb <- merge(all_defenders_offb, all_defenders_offb_freq, by = "player_defMatchup_a")
 all_defenders_offb_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = offb_plays, FUN = mean, na.rm = TRUE)
 all_defenders_offb <- merge(all_defenders_offb, all_defenders_offb_assist, by = "player_defMatchup_a")
+all_defenders_offb$avg_assist_points_allowed <- all_defenders_offb$assistOppCreated * mean(assist_offb$ptsScored_team)
 
 
 #Expected Points for Nading
 
-all_defenders_iso$expected_points1 <- all_defenders_iso$iso_pts * sum(Nading_Possessions$iso_actions, na.rm = TRUE)
-all_defenders_pick$expected_points2 <- all_defenders_pick$pick_pts * sum(Nading_Possessions$pick_actions, na.rm = TRUE)
-all_defenders_post$expected_points3 <- all_defenders_post$post_pts * sum(Nading_Possessions$post_actions, na.rm = TRUE)
-all_defenders_offb$expected_points4 <- all_defenders_offb$offBall_pts * sum(Nading_Possessions$offBall_actions, na.rm = TRUE)
-
+all_defenders_iso$expected_points_iso <- all_defenders_iso$iso_pts * nrow(Nading_Iso)
+all_defenders_pick$expected_points_pick <- all_defenders_pick$pick_pts * nrow(Nading_Pick)
+all_defenders_post$expected_points_post <- all_defenders_post$post_pts * nrow(Nading_Post)
+all_defenders_offb$expected_points_offb <- all_defenders_offb$offBall_pts * nrow(Nading_offBall)
+all_defenders_iso$expected_points_off_iso_assists <- all_defenders_iso$avg_assist_points_allowed * nrow(Nading_Iso)
+all_defenders_pick$expected_points_off_pick_assists <- all_defenders_pick$avg_assist_points_allowed * nrow(Nading_Pick)
+all_defenders_post$expected_points_off_post_assists <- all_defenders_post$avg_assist_points_allowed * nrow(Nading_Post)
+all_defenders_offb$expected_points_off_offb_assists <- all_defenders_offb$avg_assist_points_allowed * nrow(Nading_offBall)
 
 all_defenders_all_types <- cbind(all_defenders_iso, all_defenders_pick, all_defenders_post, all_defenders_offb)
-all_defenders_all_types$total_expected_points <- all_defenders_all_types$expected_points1 + all_defenders_all_types$expected_points2 + all_defenders_all_types$expected_points3 + all_defenders_all_types$expected_points4
-all_defenders_all_types <- all_defenders_all_types[,-c(5,9,13)]
-colnames(all_defenders_all_types) <- c("Defender Name", "Iso Play Average Points Allowed", "Iso Defended Frequency", "Expected Points for Nading on Iso Plays", "Pick Play Average Points Allowed", "Pick Defended Frequency", "Expected Points for Nading on Pick Plays", "Post Play Average Points Allowed", "Post Defended Frequency", "Expected Points for Nading on Post Play", "Off Ball Play Average Points Allowed", "Off Ball Defended Frequency", "Expected Points for Nading on Off Ball Play", "Total Expected Points for Nading")
-all_defenders_total_expected_points <- all_defenders_all_types[,c(1,14)]
-all_defenders_total_expected_points <- all_defenders_total_expected_points[order(all_defenders_total_expected_points$`Total Expected Points for Nading`),]
-
-# for (row in all_defenders_total_expected_points){
-#   cat(paste0(all_defenders_total_expected_points$`Defender Name`, ": ", all_defenders_total_expected_points$`Total Expected Points for Nading`, "\n"))
-# }
+all_defenders_all_types$total_expected_points <- all_defenders_all_types$expected_points_iso + all_defenders_all_types$expected_points_pick + all_defenders_all_types$expected_points_post + all_defenders_all_types$expected_points_offb
+all_defenders_all_types$total_expected_points_through_assists <- all_defenders_all_types$expected_points_off_iso_assists + all_defenders_all_types$expected_points_off_pick_assists + all_defenders_all_types$expected_points_off_post_assists + all_defenders_all_types$expected_points_off_offb_assists
+all_defenders_all_types$total_expected_points_score_and_assist <- all_defenders_all_types$total_expected_points_through_assists + all_defenders_all_types$total_expected_points
 
 
-Nading_Total_Points_Plays <- sum(Nading_Possessions$iso_pts, na.rm=TRUE) + sum(Nading_Possessions$pick_pts, na.rm = TRUE) + sum(Nading_Possessions$post_pts, na.rm = TRUE) + sum(Nading_Possessions$offBall_pts, na.rm = TRUE)
+all_defenders_all_types <- all_defenders_all_types[,-c(4,5,8,11,12,15,18,19,22,25,26)]
+colnames(all_defenders_all_types) <- c("Defender Name", "Iso Play Average Points Allowed", "Iso Defended Frequency", "Expected Points for Nading on Iso Plays", "Expected Points through Assists Oppurtunities Created on Iso Plays", "Pick Play Average Points Allowed", "Pick Defended Frequency", "Expected Points for Nading on Pick Plays", "Expected Points through Assists Oppurtunities Created on Pick Plays", "Post Play Average Points Allowed", "Post Defended Frequency", "Expected Points for Nading on Post Play", "Expected Points through Assists Oppurtunities Created on Post Plays", "Off Ball Play Average Points Allowed", "Off Ball Defended Frequency", "Expected Points for Nading on Off Ball Play", "Expected Points through Assists Oppurtunities Created on Off Ball Plays", "Total Expected Points for Nading", "Total Expected Points for Nading Through Assists", "Total Expected Points Combining Score and Assists")
+all_defenders_total_expected_points <- all_defenders_all_types[,c(1,18,19,20)]
+all_defenders_total_expected_points <- all_defenders_total_expected_points[order(all_defenders_total_expected_points$`Total Expected Points Combining Score and Assists`),]
+
+
+
 
