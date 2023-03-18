@@ -132,21 +132,18 @@ all_defenders_iso_freq <- aggregate(poss ~ player_defMatchup_a, data = iso_plays
 all_defenders_iso <- merge(all_defenders_iso, all_defenders_iso_freq, by = "player_defMatchup_a")
 all_defenders_iso_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = iso_plays, FUN = mean, na.rm = TRUE)
 all_defenders_iso <- merge(all_defenders_iso, all_defenders_iso_assist, by = "player_defMatchup_a")
-all_defenders_iso$points_allowed_off_assist <- all_defenders_iso$assistOppCreated*2
 
 all_defenders_pick <- aggregate(pick_pts ~ player_defMatchup_a, data = pick_plays, FUN = mean, na.rm = TRUE)
 all_defenders_pick_freq <- aggregate(poss ~ player_defMatchup_a, data = pick_plays, FUN = sum, na.rm = TRUE)
 all_defenders_pick <- merge(all_defenders_pick, all_defenders_pick_freq, by = "player_defMatchup_a")
 all_defenders_pick_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = pick_plays, FUN = mean, na.rm = TRUE)
 all_defenders_pick <- merge(all_defenders_pick, all_defenders_pick_assist, by = "player_defMatchup_a")
-all_defenders_pick$points_allowed_off_assist <- all_defenders_pick$assistOppCreated*2
 
 all_defenders_post <- aggregate(post_pts ~ player_defMatchup_a, data = post_plays, FUN = mean, na.rm = TRUE)
 all_defenders_post_freq <- aggregate(poss ~ player_defMatchup_a, data = post_plays, FUN = sum, na.rm = TRUE)
 all_defenders_post <- merge(all_defenders_post, all_defenders_post_freq, by = "player_defMatchup_a")
 all_defenders_post_assist <- aggregate(assistOppCreated ~ player_defMatchup_a, data = post_plays, FUN = mean, na.rm = TRUE)
 all_defenders_post <- merge(all_defenders_post, all_defenders_post_assist, by = "player_defMatchup_a")
-all_defenders_post$points_allowed_off_assist <- all_defenders_post$assistOppCreated*2
 
 all_defenders_offb <- aggregate(offBall_pts ~ player_defMatchup_a, data = offb_plays, FUN = mean, na.rm = TRUE)
 all_defenders_offb_freq <- aggregate(poss ~ player_defMatchup_a, data = offb_plays, FUN = sum, na.rm = TRUE)
