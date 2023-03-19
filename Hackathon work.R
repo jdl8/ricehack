@@ -190,5 +190,85 @@ all_defenders_total_expected_points <- all_defenders_all_types[,c(1,18,19,20)]
 all_defenders_total_expected_points <- all_defenders_total_expected_points[order(all_defenders_total_expected_points$`Total Expected Points Combining Score and Assists`),]
 
 
+#Testing on the Players Using the Similarity Score
+#Top 5 Players on Similarity Score: Joshua Sandoval, Jeremy Oscarson, Brandyn Hammond, Edward Thin-Elk, and Iaasic Kierstead
 
+
+Similarity_Score_Player_Possessions <- subset(all_possessions, all_possessions$player_off_a == "Sandoval, Joshua" |
+                                                all_possessions$player_off_a == "Oscarson, Jeremy" | 
+                                                all_possessions$player_off_a == "Hammond, Brandyn" |
+                                                all_possessions$player_off_a == "Thin-Elk, Edward" |
+                                                all_possessions$player_off_a == "Kierstead, Iaasic")
+Similarity_Iso <- subset(Similarity_Score_Player_Possessions, Similarity_Score_Player_Possessions$iso_actions>0)
+Similarity_Pick <- subset(Similarity_Score_Player_Possessions, Similarity_Score_Player_Possessions$pick_actions>0)
+Similarity_Post <- subset(Similarity_Score_Player_Possessions, Similarity_Score_Player_Possessions$post_actions>0)
+Similarity_offBall <- subset(Similarity_Score_Player_Possessions, Similarity_Score_Player_Possessions$offBall_actions>0)
+
+all_defenders_iso2 <- all_defenders_iso
+all_defenders_pick2 <- all_defenders_pick
+all_defenders_post2 <- all_defenders_post
+all_defenders_offb2 <- all_defenders_offb
+
+all_defenders_iso2$expected_points_iso <- all_defenders_iso2$iso_pts * nrow(Similarity_Iso)
+all_defenders_pick2$expected_points_pick <- all_defenders_pick2$pick_pts * nrow(Similarity_Pick)
+all_defenders_post2$expected_points_post <- all_defenders_post2$post_pts * nrow(Similarity_Post)
+all_defenders_offb2$expected_points_offb <- all_defenders_offb2$offBall_pts * nrow(Similarity_offBall)
+all_defenders_iso2$expected_points_off_iso_assists <- all_defenders_iso2$avg_assist_points_allowed * nrow(Similarity_Iso)
+all_defenders_pick2$expected_points_off_pick_assists <- all_defenders_pick2$avg_assist_points_allowed * nrow(Similarity_Pick)
+all_defenders_post2$expected_points_off_post_assists <- all_defenders_post2$avg_assist_points_allowed * nrow(Similarity_Post)
+all_defenders_offb2$expected_points_off_offb_assists <- all_defenders_offb2$avg_assist_points_allowed * nrow(Similarity_Post)
+
+all_defenders_all_types2 <- cbind(all_defenders_iso2, all_defenders_pick2, all_defenders_post2, all_defenders_offb2)
+all_defenders_all_types2$total_expected_points <- all_defenders_all_types2$expected_points_iso + all_defenders_all_types2$expected_points_pick + all_defenders_all_types2$expected_points_post + all_defenders_all_types2$expected_points_offb
+all_defenders_all_types2$total_expected_points_through_assists <- all_defenders_all_types2$expected_points_off_iso_assists + all_defenders_all_types2$expected_points_off_pick_assists + all_defenders_all_types2$expected_points_off_post_assists + all_defenders_all_types2$expected_points_off_offb_assists
+all_defenders_all_types2$total_expected_points_score_and_assist <- all_defenders_all_types2$total_expected_points_through_assists + all_defenders_all_types2$total_expected_points
+
+all_defenders_all_types2 <- all_defenders_all_types2[,-c(4,5,8,11,12,15,18,19,22,25,26)]
+colnames(all_defenders_all_types2) <- c("Defender Name", "Iso Play Average Points Allowed", "Iso Defended Frequency", "Expected Points for Players on Iso Plays", "Expected Points through Assists Oppurtunities Created on Iso Plays", "Pick Play Average Points Allowed", "Pick Defended Frequency", "Expected Points for Players on Pick Plays", "Expected Points through Assists Oppurtunities Created on Pick Plays", "Post Play Average Points Allowed", "Post Defended Frequency", "Expected Points for Players on Post Play", "Expected Points through Assists Oppurtunities Created on Post Plays", "Off Ball Play Average Points Allowed", "Off Ball Defended Frequency", "Expected Points for Players on Off Ball Play", "Expected Points through Assists Oppurtunities Created on Off Ball Plays", "Total Expected Points for Nading", "Total Expected Points for Players Through Assists", "Total Expected Points Combining Score and Assists")
+all_defenders_total_expected_points2 <- all_defenders_all_types2[,c(1,18,19,20)]
+all_defenders_total_expected_points2 <- all_defenders_total_expected_points2[order(all_defenders_total_expected_points2$`Total Expected Points Combining Score and Assists`),]
+
+
+#
+Similar_Defenders <- as.data.frame(sort(table(Similarity_Score_Player_Possessions$player_defMatchup_a), decreasing = TRUE))
+Similar_Defenders_qsq <- aggregate(qSQ ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = mean, na.rm = TRUE)
+
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_qsq, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+
+Similar_Defenders_tov <- aggregate(tov ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_tov_rate <- aggregate(tov ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = mean, na.rm = TRUE)
+
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_tov, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_tov_rate, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+
+Similar_Defenders_iso_pts <- aggregate(iso_pts ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_iso_freq <- aggregate(iso_actions ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_pick_pts <- aggregate(pick_pts ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_pick_freq <- aggregate(pick_actions ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_post_pts <- aggregate(post_pts ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_post_freq <- aggregate(post_actions ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_offb_pts <- aggregate(offBall_pts ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+Similar_Defenders_offb_freq <- aggregate(offBall_actions ~ player_defMatchup_a, data = Similarity_Score_Player_Possessions, FUN = sum, na.rm = TRUE)
+
+
+
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_iso_pts, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_iso_freq, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_pick_pts, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_pick_freq, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_post_pts, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_post_freq, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_offb_pts, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders <- merge(Similar_Defenders, Similar_Defenders_offb_freq, by.x = "Var1", by.y = "player_defMatchup_a", all.x = TRUE)
+Similar_Defenders[is.na(Similar_Defenders)] <- 0
+Similar_Defenders$TotalPoints <- Similar_Defenders$iso_pts + Similar_Defenders$pick_pts + Similar_Defenders$post_pts + Similar_Defenders$offBall_pts
+Similar_Defenders$TotalFrequency <- Similar_Defenders$iso_actions + Similar_Defenders$pick_actions + Similar_Defenders$post_actions + Similar_Defenders$offBall_actions
+Similar_Defenders$Avg_Points <- Similar_Defenders$TotalPoints / Similar_Defenders$TotalFrequency
+
+Similar_Defenders <- subset(Similar_Defenders, Similar_Defenders$TotalFrequency>=10)
+Similar_Defenders_Main_Factors <- Similar_Defenders[,c(1,2,3,4,5,16)]
+Similar_Defenders_Main_Factors <- Similar_Defenders_Main_Factors[order(Similar_Defenders_Main_Factors$`Average Points Allowed`),]
+
+
+names(Similar_Defenders_Main_Factors) <- c("Defender Name", "Frequency", "qSQ", "Turnovers Against", "Turnover Rate Against", "Average Points Allowed")
 
